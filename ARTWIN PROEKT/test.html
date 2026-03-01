@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEUTSCH PRÜFUNG - 200 UNIKATE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial Black', sans-serif; }
+        body { background: #000; color: white; text-align: center; padding-top: 60px; min-height: 100vh; }
+        .back-btn { position: fixed; top: 15px; left: 15px; background: #FF0000; color: white; padding: 12px 20px; border-radius: 50px; border: 2px solid #FFCC00; text-decoration: none; font-weight: bold; z-index: 2000; font-size: 0.8rem; }
+        .container { max-width: 850px; margin: 0 auto; padding: 15px; }
+        .level-label { color: #FFCC00; margin: 25px 0 10px; font-size: 1.4rem; text-transform: uppercase; border-bottom: 2px solid #FF0000; display: inline-block; padding: 0 20px; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 30px; }
+        .t-btn { background: #1a1a1a; color: #fff; border: 2px solid #FFCC00; padding: 20px 5px; cursor: pointer; border-radius: 15px; transition: 0.3s; font-size: 1.2rem; }
+        .t-btn:hover { background: #FFCC00; color: #000; transform: scale(1.05); }
+        .quiz-box { display: none; background: #fff; color: #000; padding: 30px; border-radius: 30px; text-align: left; border: 6px solid #FF0000; margin-top: 20px; }
+        .q-item { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        .q-item b { font-size: 1.1rem; display: block; margin-bottom: 15px; color: #000; }
+        label { display: block; padding: 15px; cursor: pointer; border-radius: 10px; font-family: sans-serif; border: 1px solid #ddd; margin-bottom: 8px; font-weight: bold; }
+        label:hover { background: #fff5f5; border-color: #FF0000; }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.5); }
+        .result-screen { display: none; background: #1a1a1a; padding: 50px; border-radius: 30px; border: 5px solid #FFCC00; margin-top: 20px; }
+        .score-big { font-size: 6rem; color: #FFCC00; margin: 20px 0; text-shadow: 4px 4px #FF0000; }
+        .btn-action { width: 100%; padding: 20px; background: #28a745; color: white; border: none; border-radius: 15px; font-size: 1.4rem; cursor: pointer; font-weight: bold; }
+        @media (max-width: 600px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">← ZURÜCK</a>
+
+<div class="container" id="menu">
+    <h1 style="color: #FFCC00; text-shadow: 3px 3px #FF0000;">DEUTSCH-TEST 200</h1>
+    <div class="level-label">A1 - A2</div>
+    <div class="grid" id="grid-easy"></div>
+    <div class="level-label">B1 - C1</div>
+    <div class="grid" id="grid-hard"></div>
+</div>
+
+<div class="container">
+    <div id="quiz" class="quiz-box">
+        <h2 id="ticket-title" style="margin-bottom: 25px; text-align:center; color: #FF0000;"></h2>
+        <div id="questions-list"></div>
+        <button class="btn-action" onclick="checkResults()">PRÜFEN</button>
+    </div>
+    <div id="result" class="result-screen">
+        <h2 id="res-status"></h2>
+        <div class="score-big" id="percent-display">0%</div>
+        <button class="btn-action" style="background:#444;" onclick="location.reload()">ZUM MENÜ</button>
+    </div>
+</div>
+
+<script>
+const masterDB = [
+    // Билет 1 (A1)
+    {q: "Wie ___ du?", a: ["heißt", "heißen", "heißt"], c: 0},
+    {q: "Ich ___ aus Deutschland.", a: ["komme", "bin", "wohne"], c: 0},
+    {q: "Das ist ___ Kind.", a: ["ein", "eine", "einer"], c: 0},
+    {q: "Wo ___ Sie?", a: ["wohnt", "wohnen", "wohnst"], c: 1},
+    {q: "Haben Sie ___ Handy?", a: ["ein", "einen", "eine"], c: 0},
+    {q: "Ich trinke ___ Kaffee.", a: ["kein", "keine", "keinen"], c: 2},
+    {q: "Was ___ du von Beruf?", a: ["bist", "ist", "sind"], c: 0},
+    {q: "Meine Mutter ___ Ärztin.", a: ["bist", "ist", "sind"], c: 1},
+    {q: "Wie spät ist ___?", a: ["das", "es", "du"], c: 1},
+    {q: "Ich ___ 20 Jahre alt.", a: ["habe", "bin", "mache"], c: 1},
+
+    // Билет 2 (A1)
+    {q: "Kommst du ___ uns?", a: ["mit", "bei", "von"], c: 0},
+    {q: "Das ist ___ Auto.", a: ["mein", "meine", "meinen"], c: 0},
+    {q: "Wir ___ heute Pizza.", a: ["essen", "isst", "esst"], c: 0},
+    {q: "Wo ___ die Kinder?", a: ["ist", "sind", "bist"], c: 1},
+    {q: "Ich ___ nach Hause.", a: ["gehe", "fahre", "beide richtig"], c: 2},
+    {q: "Ist das ___ Frau?", a: ["dein", "deine", "deiner"], c: 1},
+    {q: "Hier ___ man nicht rauchen.", a: ["darf", "soll", "muss"], c: 0},
+    {q: "Ich möchte ___ Saft.", a: ["einen", "ein", "einem"], c: 0},
+    {q: "Was ___ du am liebsten?", a: ["trinkst", "trinkt", "trinken"], c: 0},
+    {q: "___ du mir helfen?", a: ["Kannst", "Kann", "Können"], c: 0},
+
+    // Билет 3 (A2)
+    {q: "Gestern ___ ich im Kino.", a: ["bin", "war", "habe"], c: 1},
+    {q: "Ich habe Hausaufgaben ___.", a: ["gemacht", "mache", "macht"], c: 0},
+    {q: "Wir ___ nach Berlin gefahren.", a: ["haben", "sind", "werden"], c: 1},
+    {q: "Hilfst du ___?", a: ["mich", "mir", "ich"], c: 1},
+    {q: "Das Buch liegt ___ Tisch.", a: ["auf dem", "auf den", "in"], c: 0},
+    {q: "Ich fahre mit ___ Bus.", a: ["der", "den", "dem"], c: 2},
+    {q: "Das ist das Haus ___ Vaters.", a: ["meines", "mein", "meiner"], c: 0},
+    {q: "___ hast du gestern gesehen?", a: ["Wer", "Wen", "Wem"], c: 1},
+    {q: "Ich gehe ___ die Stadt.", a: ["in", "nach", "zu"], c: 0},
+    {q: "Morgen ___ wir früh aufstehen.", a: ["müssen", "muss", "müsst"], c: 0},
+
+    // Билет 4 (A2)
+    {q: "Das Wetter ist ___ als gestern.", a: ["gut", "besser", "besten"], c: 1},
+    {q: "Ich kenne ___ Mann.", a: ["den", "der", "dem"], c: 0},
+    {q: "Er ___ schon gut Deutsch.", a: ["kann", "kannst", "können"], c: 0},
+    {q: "Wir treffen uns ___ Montag.", a: ["am", "im", "um"], c: 0},
+    {q: "Trinkst du Tee ___ Zucker?", a: ["ohne", "mit", "bei"], c: 0},
+    {q: "Ich ___ dir das Buch.", a: ["gebe", "gibt", "gibst"], c: 0},
+    {q: "Wo ___ ihr gestern Abend?", a: ["wart", "warst", "waren"], c: 0},
+    {q: "Sie (она) ___ im Büro.", a: ["arbeitet", "arbeiten", "arbeitest"], c: 0},
+    {q: "Kommst du ___ die Party?", a: ["auf", "zu", "nach"], c: 0},
+    {q: "Darf ich ___ fragen?", a: ["dich", "dir", "du"], c: 0},
+
+    // Билет 5 (A2+)
+    {q: "Seit ___ Monat lerne ich Deutsch.", a: ["einem", "einen", "ein"], c: 0},
+    {q: "Ich interessiere mich ___ Musik.", a: ["für", "über", "an"], c: 0},
+    {q: "Er hat Angst ___ Hunden.", a: ["vor", "von", "aus"], c: 0},
+    {q: "Wir freuen uns ___ den Urlaub.", a: ["auf", "über", "an"], c: 0},
+    {q: "Wohnst du schon ___ in Berlin?", a: ["lange", "lang", "länger"], c: 0},
+    {q: "Ich ___ gern ins Kino gegangen.", a: ["bin", "wäre", "hätte"], c: 1},
+    {q: "Das ist die Frau, ___ ich kenne.", a: ["die", "der", "den"], c: 0},
+    {q: "Er sagt, ___ er kommt.", a: ["dass", "weil", "wenn"], c: 0},
+    {q: "___ du Zeit hast, komm vorbei.", a: ["Wenn", "Als", "Dass"], c: 0},
+    {q: "Ich habe ___ Hunger.", a: ["keinen", "kein", "keine"], c: 0},
+
+    // Билет 6 (A2-B1)
+    {q: "Ich lerne Deutsch, ___ ich in Deutschland arbeiten will.", a: ["weil", "dass", "obwohl"], c: 0},
+    {q: "___ ich 10 Jahre alt war, lebte ich in Moskau.", a: ["Als", "Wenn", "Wann"], c: 0},
+    {q: "Ich brauche ___ Hilfe.", a: ["deine", "dein", "deiner"], c: 0},
+    {q: "Wir gehen ___ Park.", a: ["in den", "im", "zu"], c: 0},
+    {q: "Könnten Sie das bitte ___?", a: ["wiederholen", "wiederholt", "wiederhole"], c: 0},
+    {q: "Ich ___ den Film schon gesehen.", a: ["habe", "bin", "werde"], c: 0},
+    {q: "Das Essen ___ gut.", a: ["schmeckt", "riecht", "beide richtig"], c: 2},
+    {q: "Er hat ___ Tasche verloren.", a: ["seine", "sein", "seiner"], c: 0},
+    {q: "Gehört dieses Buch ___?", a: ["dir", "dich", "du"], c: 0},
+    {q: "Ich bleibe ___ Hause.", a: ["zu", "nach", "in"], c: 0},
+
+    // Билет 7 (A2+)
+    {q: "Was hast du ___ Wochenende gemacht?", a: ["am", "im", "um"], c: 0},
+    {q: "Ich ___ dir viel Erfolg.", a: ["wünsche", "hoffe", "glaube"], c: 0},
+    {q: "Das ist ein ___ Tag.", a: ["schöner", "schönen", "schöne"], c: 0},
+    {q: "Er ___ heute nicht kommen.", a: ["kann", "kannst", "darf"], c: 0},
+    {q: "Siehst du ___ Mann dort?", a: ["den", "der", "dem"], c: 0},
+    {q: "Ich warte ___ dich.", a: ["auf", "an", "für"], c: 0},
+    {q: "Bist du fertig ___ der Arbeit?", a: ["mit", "bei", "von"], c: 0},
+    {q: "Ich habe das Buch ___ Tisch gelegt.", a: ["auf den", "auf dem", "in"], c: 0},
+    {q: "Wie findest du ___ Rock?", a: ["den", "der", "dem"], c: 0},
+    {q: "Wir haben ___ Zeit.", a: ["wenig", "klein", "kurz"], c: 0},
+
+    // Билет 8 (A2-B1)
+    {q: "Ich fahre ___ dem Auto.", a: ["mit", "von", "aus"], c: 0},
+    {q: "Das Kind ___ im Garten.", a: ["spielt", "spielen", "spielst"], c: 0},
+    {q: "Haben Sie ___ Bruder?", a: ["einen", "ein", "einem"], c: 0},
+    {q: "Ich trinke ___ Mineralwasser.", a: ["gern", "gut", "viel"], c: 0},
+    {q: "Das Haus ist ___.", a: ["groß", "hoch", "beide"], c: 2},
+    {q: "Wo ___ du gestern Abend?", a: ["warst", "bist", "wart"], c: 0},
+    {q: "Kommst du ___ mir?", a: ["zu", "nach", "in"], c: 0},
+    {q: "Er hat ___ Geld.", a: ["kein", "keine", "nicht"], c: 0},
+    {q: "Ich ___ dir helfen.", a: ["kann", "muss", "soll"], c: 0},
+    {q: "Das Wetter ___ heute schlecht.", a: ["ist", "wird", "war"], c: 0},
+
+    // Билет 9 (A2+)
+    {q: "Ich ___ heute spät aufgewacht.", a: ["bin", "habe", "war"], c: 0},
+    {q: "Wir ___ gestern viel Spaß.", a: ["hatten", "waren", "hatte"], c: 0},
+    {q: "Ich rufe dich ___.", a: ["an", "auf", "mit"], c: 0},
+    {q: "Kannst du das Licht ___?", a: ["ausmachen", "anmachen", "beide"], c: 2},
+    {q: "Ich habe Hunger, ___ ich esse etwas.", a: ["also", "weil", "denn"], c: 0},
+    {q: "Das ist die Schule, ___ ich lerne.", a: ["in der", "wo", "beide"], c: 2},
+    {q: "Ich ___ morgen arbeiten.", a: ["muss", "müssen", "musst"], c: 0},
+    {q: "Was ___ du am liebsten?", a: ["liest", "liest", "lesest"], c: 0},
+    {q: "Das Kleid passt ___ gut.", a: ["mir", "mich", "ich"], c: 0},
+    {q: "Wir fliegen ___ Spanien.", a: ["nach", "in", "zu"], c: 0},
+
+    // Билет 10 (A2-B1)
+    {q: "Das ist die ___ Frau.", a: ["nette", "netten", "netter"], c: 0},
+    {q: "Ich ___ gern Fußball.", a: ["spiele", "spielst", "spielt"], c: 0},
+    {q: "Kommst du ___ dem Bus?", a: ["mit", "in", "von"], c: 0},
+    {q: "Er hat ___ Fehler gemacht.", a: ["einen", "ein", "einem"], c: 0},
+    {q: "Wir gehen ___ Kino.", a: ["ins", "im", "zu"], c: 0},
+    {q: "Wie heißt ___ Mann?", a: ["der", "den", "dem"], c: 0},
+    {q: "Ich habe ___ Zeit.", a: ["keine", "kein", "nicht"], c: 0},
+    {q: "Darf ich ___ fragen?", a: ["Sie", "Ihnen", "Ihr"], c: 0},
+    {q: "Wo ___ die Schlüssel?", a: ["sind", "ist", "bist"], c: 0},
+    {q: "Er ___ Deutsch.", a: ["spricht", "sprech", "sprichst"], c: 0},
+
+    // Билет 11 (B1)
+    {q: "Ich lerne viel, ___ die Prüfung zu bestehen.", a: ["um", "damit", "dass"], c: 0},
+    {q: "___ es regnete, gingen wir spazieren.", a: ["Obwohl", "Weil", "Wenn"], c: 0},
+    {q: "Ich freue mich ___ deinen Besuch.", a: ["auf", "über", "an"], c: 0},
+    {q: "Das ist der Mann, ___ ich gestern sah.", a: ["den", "der", "dem"], c: 0},
+    {q: "Er arbeitet, ___ zu essen.", a: ["ohne", "anstatt", "um"], c: 2},
+    {q: "Ich hätte gern ein Haus, wenn ich reich ___.", a: ["wäre", "bin", "werde"], c: 0},
+    {q: "Die Hausaufgaben ___ gemacht.", a: ["wurden", "werden", "worden"], c: 0},
+    {q: "An deiner Stelle ___ ich mehr lernen.", a: ["würde", "werde", "wäre"], c: 0},
+    {q: "Er wartet ___ seine Freundin.", a: ["auf", "an", "für"], c: 0},
+    {q: "Ich interessiere mich ___ Kunst.", a: ["für", "über", "an"], c: 0},
+
+    // Билет 12 (B1)
+    {q: "Je mehr du lernst, ___ besser wirst du.", a: ["desto", "umso", "als"], c: 0},
+    {q: "Trotz ___ Regens gingen wir raus.", a: ["des", "dem", "der"], c: 0},
+    {q: "Ich erinnere mich ___ das Treffen.", a: ["an", "von", "über"], c: 0},
+    {q: "Er tut so, als ___ er alles wisse.", a: ["als", "ob", "wenn"], c: 0},
+    {q: "Das Gesetz ___ verabschiedet.", a: ["wurde", "worden", "wird"], c: 0},
+    {q: "Wir haben uns ___ die Regeln gehalten.", a: ["an", "für", "über"], c: 0},
+    {q: "Die Frau, ___ Kind weggelaufen ist, weint.", a: ["deren", "die", "derer"], c: 0},
+    {q: "Er behauptет, krank ___ sein.", a: ["zu", "haben", "werde"], c: 0},
+    {q: "Ich bin ___ gewohnt, früh aufzustehen.", a: ["daran", "das", "darauf"], c: 0},
+    {q: "Es kommt ___ das Wetter an.", a: ["auf", "von", "aus"], c: 0},
+
+    // Билет 13 (B1-B2)
+    {q: "Er hat sich ___ die Arbeit konzentriert.", a: ["auf", "an", "über"], c: 0},
+    {q: "Wir ___ gestern eingeladen.", a: ["wurden", "worden", "werden"], c: 0},
+    {q: "Anstatt ___ lernen, schlief er.", a: ["zu", "um", "dass"], c: 0},
+    {q: "Das ist die Stadt, ___ ich lebe.", a: ["in der", "wo", "beide"], c: 2},
+    {q: "Ich bin stolz ___ dich.", a: ["auf", "über", "an"], c: 0},
+    {q: "Er ___ angerufen haben.", a: ["muss", "soll", "beide"], c: 2},
+    {q: "Hätte ich mehr Zeit, ___ ich mehr.", a: ["würde", "werde", "wäre"], c: 0},
+    {q: "Er ___ (Passiv) operiert.", a: ["wird", "ist", "hat"], c: 0},
+    {q: "Ich ___ den Termin vergessen.", a: ["habe", "bin", "werde"], c: 0},
+    {q: "Er hat sich ___ dich verliebt.", a: ["in", "auf", "an"], c: 0},
+
+    // Билет 14 (B1-B2)
+    {q: "Das Haus, ___ er baute, ist groß.", a: ["das", "welches", "beide"], c: 2},
+    {q: "Sie arbeitet ___ Ärztin.", a: ["als", "wie", "für"], c: 0},
+    {q: "Ich freue mich ___ das Geschenk.", a: ["über", "auf", "an"], c: 0},
+    {q: "Er hat ___ (Genitiv) des Vaters gedacht.", a: ["des", "dem", "den"], c: 0},
+    {q: "Wir ___ gestern im Kino.", a: ["waren", "sind", "hatten"], c: 0},
+    {q: "Ich ___ (Passiv) gestern gerufen.", a: ["wurde", "werde", "worden"], c: 0},
+    {q: "Er kam, ___ er krank war.", a: ["obwohl", "weil", "trotzdem"], c: 0},
+    {q: "Ich trinke Kaffee, ___ (statt) Tee.", a: ["statt", "ohne", "um"], c: 0},
+    {q: "Er ___ (Konj. II) gern kommen.", a: ["würde", "werde", "wäre"], c: 0},
+    {q: "Das ist der Junge, ___ ich geholfen habe.", a: ["dem", "den", "der"], c: 0},
+    // Билет 15 (B1-B2)
+    {q: "Ich ___ (Zukunft) morgen kommen.", a: ["werde", "würde", "werden"], c: 0},
+    {q: "Er ist ___ (Dativ) dem Weg.", a: ["auf", "an", "in"], c: 0},
+    {q: "Das Buch ___ (Passiv) gelesen.", a: ["wird", "ist", "hat"], c: 0},
+    {q: "Ich bin ___ (Akk) dich.", a: ["für", "gegen", "beide"], c: 2},
+    {q: "Er hat ___ (Genitiv) der Mutter geholfen.", a: ["der", "die", "den"], c: 0},
+    {q: "Wir ___ (Vergangenheit) Fußball.", a: ["spielten", "spielen", "spielte"], c: 0},
+    {q: "Er ___ (Konj. II) mehr Geld haben.", a: ["müsste", "muss", "müsst"], c: 0},
+    {q: "Das Kind ___ (Passiv) gewaschen.", a: ["wurde", "worden", "wird"], c: 0},
+    {q: "Ich ___ (Zukunft) das machen.", a: ["werde", "würde", "wäre"], c: 0},
+    {q: "Er ist ___ (Präp) Hause.", a: ["zu", "nach", "in"], c: 0},
+
+    // Билет 16 (B2)
+    {q: "Der Zeuge ___ (Passiv) befragt.", a: ["wurde", "ist", "wird"], c: 0},
+    {q: "Ich ___ (Konj. II) es anders machen.", a: ["würde", "werde", "wäre"], c: 0},
+    {q: "Er hat sich ___ (Präp) die Reise vorbereitet.", a: ["auf", "an", "für"], c: 0},
+    {q: "Das Ergebnis ___ (Passiv) bekannt gegeben.", a: ["wird", "wurde", "beide"], c: 2},
+    {q: "Ich ___ (Passiv Perfekt) eingeladen worden.", a: ["bin", "habe", "werde"], c: 0},
+    {q: "Er ___ (Konj. II) Zeit haben.", a: ["hätte", "hatte", "hat"], c: 0},
+    {q: "Wir ___ (Passiv) informiert.", a: ["werden", "wurden", "beide"], c: 2},
+    {q: "Ich ___ (Zukunft) dich anrufen.", a: ["werde", "würde", "werde"], c: 0},
+    {q: "Das Fenster ___ (Passiv) geöffnet.", a: ["wird", "wurde", "beide"], c: 2},
+    {q: "Er ___ (Konj II) dort sein.", a: ["wäre", "war", "bin"], c: 0},
+
+    // Билет 17 (B2-C1)
+    {q: "Infolge ___ (Genitiv) des Unwetters...", a: ["des", "dem", "den"], c: 0},
+    {q: "Er ___ (Konj II) es getan haben.", a: ["müsste", "muss", "müsst"], c: 0},
+    {q: "Das Problem ___ (Passiv) gelöst.", a: ["wird", "ist", "hat"], c: 0},
+    {q: "Ich ___ (Zukunft) dort sein.", a: ["werde", "würde", "wäre"], c: 0},
+    {q: "Er hat ___ (Genitiv) der Kinder gedacht.", a: ["der", "den", "die"], c: 0},
+    {q: "Wir ___ (Passiv) gerettet.", a: ["wurden", "worden", "werden"], c: 0},
+    {q: "Er ___ (Konj. II) reicher sein.", a: ["wäre", "war", "ist"], c: 0},
+    {q: "Das Bild ___ (Passiv) gemalt.", a: ["wird", "wurde", "beide"], c: 2},
+    {q: "Ich ___ (Zukunft) arbeiten.", a: ["werde", "würde", "werde"], c: 0},
+    {q: "Er ist ___ (Präp) Berlin.", a: ["in", "nach", "zu"], c: 0},
+
+    // Билет 18 (C1)
+    {q: "Angesichts ___ (Genitiv) der Krise...", a: ["der", "die", "den"], c: 0},
+    {q: "Er ___ (Konj. II) es wissen.", a: ["müsste", "muss", "müsst"], c: 0},
+    {q: "Das Ziel ___ (Passiv) erreicht.", a: ["wurde", "worden", "wird"], c: 0},
+    {q: "Ich ___ (Zukunft) fliegen.", a: ["werde", "würde", "wäre"], c: 0},
+    {q: "Er hat ___ (Genitiv) der Freunde gedacht.", a: ["der", "die", "den"], c: 0},
+    {q: "Wir ___ (Passiv) befreit.", a: ["wurden", "worden", "werden"], c: 0},
+    {q: "Er ___ (Konj II) glücklicher sein.", a: ["wäre", "war", "ist"], c: 0},
+    {q: "Das Haus ___ (Passiv) gebaut.", a: ["wurde", "wird", "beide"], c: 2},
+    {q: "Ich ___ (Zukunft) schlafen.", a: ["werde", "würde", "werde"], c: 0},
+    {q: "Er ist ___ (Präp) Hause.", a: ["zu", "nach", "in"], c: 0},
+
+    // Билет 19 (C1)
+    {q: "Ungeachtet ___ (Genitiv) der Warnung...", a: ["der", "die", "den"], c: 0},
+    {q: "Er ___ (Konj II) dort gewesen sein.", a: ["müsste", "muss", "müsst"], c: 0},
+    {q: "Das Werk ___ (Passiv) vollendet.", a: ["wurde", "worden", "wird"], c: 0},
+    {q: "Ich ___ (Zukunft) essen.", a: ["werde", "würde", "wäre"], c: 0},
+    {q: "Er hat ___ (Genitiv) des Bruders gedacht.", a: ["des", "dem", "den"], c: 0},
+    {q: "Wir ___ (Passiv) gewarnt.", a: ["wurden", "worden", "werden"], c: 0},
+    {q: "Er ___ (Konj II) klüger sein.", a: ["wäre", "war", "ist"], c: 0},
+    {q: "Das Auto ___ (Passiv) repariert.", a: ["wurde", "wird", "beide"], c: 2},
+    {q: "Ich ___ (Zukunft) spielen.", a: ["werde", "würde", "werde"], c: 0},
+    {q: "Er ist ___ (Präp) München.", a: ["in", "nach", "zu"], c: 0},
+
+    // Билет 20 (C1 Final)
+    {q: "Zwecks ___ (Genitiv) der Information...", a: ["der", "die", "den"], c: 0},
+    {q: "Er ___ (Konj II) recht haben.", a: ["müsste", "muss", "müsst"], c: 0},
+    {q: "Die Arbeit ___ (Passiv) beendet.", a: ["wurde", "worden", "wird"], c: 0},
+    {q: "Ich ___ (Zukunft) gehen.", a: ["werde", "würde", "wäre"], c: 0},
+    {q: "Er hat ___ (Genitiv) der Ahnen gedacht.", a: ["der", "die", "den"], c: 0},
+    {q: "Wir ___ (Passiv) gerufen.", a: ["wurden", "worden", "werden"], c: 0},
+    {q: "Er ___ (Konj II) schneller sein.", a: ["wäre", "war", "ist"], c: 0},
+    {q: "Das Fenster ___ (Passiv) geputzt.", a: ["wurde", "wird", "beide"], c: 2},
+    {q: "Ich ___ (Zukunft) rennen.", a: ["werde", "würde", "werde"], c: 0},
+    {q: "Er ist ___ (Präp) Hamburg.", a: ["in", "nach", "zu"], c: 0}
+];
+
+// РЕНДЕРИНГ БИЛЕТОВ
+const easyGrid = document.getElementById('grid-easy');
+const hardGrid = document.getElementById('grid-hard');
+
+for (let i = 1; i <= 20; i++) {
+    let btn = document.createElement('button');
+    btn.className = 't-btn';
+    btn.innerText = i;
+    btn.onclick = () => startTicket(i);
+    if(i <= 10) easyGrid.appendChild(btn);
+    else hardGrid.appendChild(btn);
+}
+
+let currentQuestions = [];
+
+function startTicket(num) {
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('quiz').style.display = 'block';
+    document.getElementById('ticket-title').innerText = `TICKET ${num}`;
+    const list = document.getElementById('questions-list');
+    list.innerHTML = '';
+    let startIdx = (num - 1) * 10;
+    currentQuestions = masterDB.slice(startIdx, startIdx + 10);
+    currentQuestions.forEach((item, index) => {
+        list.innerHTML += `<div class="q-item"><b>${index + 1}. ${item.q}</b>
+            <label><input type="radio" name="q${index}" value="0"> ${item.a[0]}</label>
+            <label><input type="radio" name="q${index}" value="1"> ${item.a[1]}</label>
+            <label><input type="radio" name="q${index}" value="2"> ${item.a[2]}</label></div>`;
+    });
+    window.scrollTo(0,0);
+}
+
+function checkResults() {
+    let score = 0;
+    currentQuestions.forEach((item, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        if (selected && parseInt(selected.value) === item.c) score++;
+    });
+    const percent = (score / 10) * 100;
+    document.getElementById('quiz').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('percent-display').innerText = percent + "%";
+    document.getElementById('res-status').innerText = percent >= 60 ? "BESTANDEN! ✅" : "DURCHGEFALLEN ❌";
+}
+</script>
+</body>
+</html>
